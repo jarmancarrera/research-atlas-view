@@ -16,111 +16,38 @@
 <body>
   <a class="skip" href="#main">Skip to the observatory</a>
   <header class="masthead">
-    <a class="wordmark" href="./" aria-label="Cornell EMI home">
-      <span class="cornell-name">Cornell</span><span class="brand-rule" aria-hidden="true"></span><span class="institute-name"><strong>EMI</strong><small>Emerging Markets<br>Institute</small></span>
-    </a>
-    <div class="mast-actions">
-      <span class="status-pill"><i id="statusDot"></i><span id="loadStatus" role="status">Opening your research workspace</span></span>
-      <button class="button ghost" id="reloadLatest" type="button">Refresh data</button>
-    </div>
+    <a class="wordmark" href="./" aria-label="Cornell EMI home"><span class="cornell-name">Cornell</span><span class="brand-rule" aria-hidden="true"></span><span class="institute-name"><strong>EMI</strong><small>Emerging Markets<br>Institute</small></span></a>
+    <div class="product-name"><h1>Emerging markets observatory</h1><span>Research workspace</span></div>
+    <div class="mast-actions"><span class="status-pill"><i id="statusDot"></i><span id="loadStatus" role="status">Opening research data</span></span></div>
   </header>
-
   <main id="main" class="page-shell">
-    <section class="opening">
-      <div id="heroParallax" class="hero-parallax" aria-hidden="true"><svg viewBox="0 0 900 260" focusable="false"><path d="M50 260C270 35 410 220 650 0M130 260C350 35 490 220 730 0M210 260C430 35 570 220 810 0M290 260C510 35 650 220 890 0M370 260C590 35 730 220 970 0"/><path d="M0 65H900M0 130H900M0 195H900"/></svg></div>
-      <div class="opening-copy">
-        <h1>Emerging markets<br> <span>observatory</span></h1>
-        <p class="deck">A research workspace for investment, trade and economic change.</p>
-        <div class="opening-facts" aria-label="Data coverage">
-          <span><b id="economyCount">Not loaded</b><small>economies</small></span>
-          <span><b id="indicatorCount">Not loaded</b><small>indicators</small></span>
-          <span><b id="observationWindow">Not loaded</b><small>annual observations</small></span>
+    <div class="workspace">
+      <div class="workspace-bar">
+        <nav class="view-tabs" aria-label="Observatory sections"><button class="tab active" data-tab="overview" type="button" aria-current="page">Explore</button><button class="tab" data-tab="compare" type="button">Compare</button><button class="tab" data-tab="sources" type="button">Evidence &amp; library</button><button class="tab" data-tab="chapters" type="button">Research agenda</button></nav>
+        <div class="workspace-tools"><button class="button ghost" id="reloadLatest" type="button">Refresh data</button>
+          <details class="saved-box tool-menu"><summary>Saved views</summary><div class="tool-popover"><label for="viewName">Name this view</label><input id="viewName" class="field" type="text" maxlength="60" placeholder="Brazil · FDI cycle" disabled><label class="check-label"><input id="pinSnapshot" type="checkbox" disabled><span>Keep this data version</span></label><button id="saveView" class="button dark full" type="button" disabled>Save view</button><label for="savedViews">Open a saved view</label><select id="savedViews" class="field" aria-label="Saved views"></select><div class="button-row"><button id="loadView" class="button secondary" type="button" disabled>Open view</button><button id="deleteView" class="button subtle" type="button" disabled>Delete</button></div><p class="help">Views use the latest available data unless you keep this version.</p></div></details>
+          <details class="export-group tool-menu"><summary>Download</summary><div class="tool-popover"><strong>Download this selection</strong><button id="exportCsv" class="button secondary full" type="button" disabled>Data · CSV</button><button id="exportSvg" class="button secondary full" type="button" disabled>Trend chart · SVG</button><p class="help">Includes sources, dates, units and transformations.</p></div></details>
         </div>
       </div>
-      <aside class="snapshot-card" aria-label="Data publication dates">
-        <div class="snapshot-top"><strong>Research data</strong><span id="snapshotMode" class="snapshot-mode">Latest release</span></div>
-        <span id="snapshotId" hidden></span>
-        <dl>
-          <div><dt>Source</dt><dd id="sourceName">Not loaded</dd></div>
-          <div><dt>Published</dt><dd id="providerUpdated">Not loaded</dd></div>
-          <div><dt>Updated here</dt><dd id="retrievedAt">Not loaded</dd></div>
-        </dl>
-        <p>Annual observations. Coverage varies by economy and indicator.</p>
-      </aside>
-    </section>
-
-    <div id="globalMessage" class="message" role="status" aria-live="polite" hidden></div>
-
-    <div class="workspace">
-      <aside class="controls" aria-label="Chart filters and saved views">
-        <button type="button" class="mobile-filter-toggle" id="toggleFilters" aria-expanded="false" aria-controls="filterFields">Filters and economies <span aria-hidden="true">+</span></button>
+      <div class="data-strip" aria-label="Data scope and dates"><div class="data-scope"><strong id="sourceName">Not loaded</strong><span><b id="economyCount">Not loaded</b> economies</span><span><b id="indicatorCount">Not loaded</b> indicators</span><span><b id="observationWindow">Not loaded</b> observations</span></div><div class="data-dates"><span>Source updated <b id="providerUpdated">Not loaded</b></span><span>Retrieved <b id="retrievedAt">Not loaded</b></span><span id="snapshotMode" class="snapshot-mode">Available data version</span><span id="snapshotId" hidden></span></div></div>
+      <div id="globalMessage" class="message" role="status" aria-live="polite" hidden></div>
+      <aside class="controls" aria-label="Chart filters and focus economies">
+        <button type="button" class="mobile-filter-toggle" id="toggleFilters" aria-expanded="false" aria-controls="filterFields">Edit indicator, years &amp; economies <span aria-hidden="true">+</span></button>
         <div id="filterFields" class="filter-fields">
-        <div class="controls-heading"><strong>Build your view</strong><span class="control-count">Changes apply instantly</span></div>
-        <section class="control-group">
-          <label for="metricSelect">Indicator</label>
-          <select id="metricSelect" class="field" disabled></select>
-          <p id="metricDescription" class="help">Choose what you want to measure.</p>
-        </section>
-        <section class="control-group">
-          <div class="control-label">Observation window</div>
-          <div class="field-pair"><label><span>From</span><input id="startYear" class="field" type="number" disabled></label><label><span>Through</span><input id="endYear" class="field" type="number" disabled></label></div>
-          <label for="selectedYear" class="selected-year-label">Comparison year</label>
-          <input id="selectedYear" class="field" type="number" disabled>
-        </section>
-        <fieldset class="control-group value-mode">
-          <legend>View values as</legend>
-          <label><input name="seriesMode" type="radio" value="level" checked disabled><span>Original values</span></label>
-          <label><input name="seriesMode" type="radio" value="index" disabled><span>Index · shared start = 100</span></label>
-          <p id="indexNote" class="help">Index mode requires a positive observation for every focus economy in a shared year.</p>
-        </fieldset>
-        <section class="control-group">
-          <label for="rankingScope">Economies in ranking</label>
-          <select id="rankingScope" class="field" disabled><option value="top12">Top 12 plus focus economies</option><option value="all">All reporting economies</option></select>
-        </section>
-        <section class="control-group focus-control">
-          <div class="group-heading"><label for="countrySearch">Focus economies</label><span id="focusCount" class="count-badge">0 / 3</span></div>
-          <div class="search-row"><input id="countrySearch" class="field" type="search" list="countryOptions" placeholder="Search for an economy" autocomplete="off" disabled><button id="addCountry" class="button accent" type="button" disabled>Add</button></div>
-          <datalist id="countryOptions"></datalist>
-          <ul id="selectedCountries" class="selected-list" aria-live="polite"></ul>
-          <p class="help">Choose up to three economies. Their colors stay consistent across charts.</p>
-        </section>
-        <details class="saved-box">
-          <summary>Saved views</summary>
-          <label for="viewName">Name your view</label><input id="viewName" class="field" type="text" maxlength="60" placeholder="Brazil · FDI cycle" disabled>
-          <label class="check-label"><input id="pinSnapshot" type="checkbox" disabled><span>Keep this data version</span></label>
-          <button id="saveView" class="button dark full" type="button" disabled>Save view</button>
-          <label for="savedViews">Open a saved view</label><select id="savedViews" class="field" aria-label="Saved views"></select>
-          <div class="button-row"><button id="loadView" class="button secondary" type="button" disabled>Open view</button><button id="deleteView" class="button subtle" type="button" disabled>Delete</button></div>
-          <p class="help">By default, saved views use the latest data. Keep this version to revisit the same observations.</p>
-        </details>
-        <section class="control-group export-group">
-          <span class="control-label">Download this view</span>
-          <button id="exportCsv" class="button secondary full" type="button" disabled>Download data · CSV</button>
-          <button id="exportSvg" class="button secondary full" type="button" disabled>Download chart · SVG</button>
-          <p class="help">Downloads include sources, dates and units.</p>
-        </section>
+          <div class="query-row">
+            <div class="query-metric"><label for="metricSelect">Indicator</label><select id="metricSelect" class="field" disabled></select></div>
+            <fieldset class="query-window"><legend>Observation window</legend><div class="field-pair"><label class="sr" for="startYear">From year</label><input id="startYear" class="field" type="number" disabled><span aria-hidden="true">to</span><label class="sr" for="endYear">Through year</label><input id="endYear" class="field" type="number" disabled></div></fieldset>
+            <div class="query-year"><label for="selectedYear">Comparison year</label><input id="selectedYear" class="field" type="number" disabled></div>
+            <fieldset class="value-mode"><legend>Display</legend><div class="mode-options"><label><input name="seriesMode" type="radio" value="level" checked disabled><span>Source values</span></label><label><input name="seriesMode" type="radio" value="index" disabled><span>Index = 100</span></label></div></fieldset>
+          </div>
+          <div class="focus-control"><div class="group-heading"><label for="countrySearch">Focus economies</label><span id="focusCount" class="count-badge">0 / 3</span></div><ul id="selectedCountries" class="selected-list" aria-live="polite"></ul><div class="search-row"><input id="countrySearch" class="field" type="search" list="countryOptions" placeholder="Add an economy" autocomplete="off" disabled><button id="addCountry" class="button secondary" type="button" disabled>Add</button></div><datalist id="countryOptions"></datalist></div>
         </div>
       </aside>
-
       <div class="research">
-        <nav class="view-tabs" aria-label="Observatory sections">
-          <button class="tab active" data-tab="overview" type="button" aria-current="page">Explore</button>
-          <button class="tab" data-tab="compare" type="button">Compare</button>
-          <button class="tab" data-tab="sources" type="button">Sources &amp; library</button>
-          <button class="tab" data-tab="chapters" type="button">Research agenda</button>
-        </nav>
-
         <section class="tab-panel" id="tab-overview" aria-labelledby="overviewTitle">
-          <div class="section-heading">
-            <div><h2 id="overviewTitle">Investment and economic context</h2></div>
-            <p id="coverageSummary" class="coverage-summary">Choose an indicator to begin</p>
-          </div>
-          <div id="focusOverview" class="focus-overview" aria-label="Selected economy values"></div>
-          <section class="coverage-rail" aria-label="Observation coverage in the selected window">
-            <div class="coverage-copy"><span class="coverage-mark" aria-hidden="true"><svg viewBox="0 0 28 28"><path d="M4 21 10 14l4 4 9-12"/><path d="M4 5v16h20"/></svg></span><div><strong id="gapHeadline">Gaps are part of the record</strong><p id="gapCopy">Missing observations are not filled or treated as zero.</p></div></div>
-            <div id="coverageMarks" class="coverage-marks" aria-hidden="true"></div>
-          </section>
-
+          <div class="section-heading"><div><h2 id="overviewTitle">Explore the data</h2><p id="metricDescription" class="metric-definition">Choose a measure to begin.</p></div><span class="research-source">Annual observations</span></div>
+          <div class="analysis-layout">
+            <div class="analysis-primary">
           <section class="panel timeline-panel" aria-labelledby="timelineTitle">
             <div class="panel-head"><div><h3 id="timelineTitle">Annual trend</h3><p id="timelineSubtitle" class="panel-sub">Choose an indicator and observation window.</p></div><div class="view-toggle" role="group" aria-label="Timeline presentation"><button id="showChart" type="button" class="selected" aria-pressed="true">Chart</button><button id="showTable" type="button" aria-pressed="false">Table</button></div></div>
             <div id="trendLegend" class="legend" aria-label="Focused economies"></div>
@@ -128,26 +55,32 @@
             <div id="trendTableMount" class="table-wrap" hidden></div>
             <p id="timelineStatus" class="chart-caption">Hover a point for its source value. Gaps break the series.</p>
           </section>
-          <section class="macro-lens" aria-labelledby="macroLensTitle"><div class="macro-lens-head"><div><h3 id="macroLensTitle">The wider economic picture</h3><p id="macroLensNote">Six indicators for your focus economies. Each chart has its own scale; values below are for the comparison year.</p></div><span id="macroLensWindow" class="macro-window">Selected window</span></div><div id="macroLensGrid" class="macro-lens-grid" aria-live="polite"></div></section>
-          <div class="chart-grid">
-            <section class="panel ranking-panel" aria-labelledby="rankingTitle"><div class="panel-head"><div><h3 id="rankingTitle">Global ranking <span class="year-tag">· <span id="rankYear">Not set</span></span></h3><p class="panel-sub">Compare reported values. Negative flows remain below zero.</p></div></div><div id="rankingMount" class="plot-wrap rank-scroll" role="region" aria-label="Interactive signed economy ranking"></div><details class="data-alternative"><summary>Show ranking values as a table</summary><div id="rankingTableMount" class="table-wrap"></div></details></section>
-            <section class="panel scatter-panel" aria-labelledby="scatterTitle"><div class="panel-head"><div><h3 id="scatterTitle">Income and inward FDI <span class="year-tag">· <span id="scatterYear">Not set</span></span></h3><p class="panel-sub">How income and investment relate across reporting economies.</p></div></div><div id="scatterMount" class="plot-wrap" role="region" aria-label="Interactive GDP per capita and inward FDI scatter plot"></div><p id="scatterStatus" class="chart-caption">Only economies with both selected-year observations appear.</p><details class="data-alternative"><summary>Show scatter values as a table</summary><div id="scatterTableMount" class="table-wrap"></div></details></section>
+
+            </div>
+            <aside class="year-reading" aria-label="Comparison year observations"><div class="reading-head"><h3>At a glance</h3><p>Source values in the comparison year</p></div><div id="focusOverview" class="focus-overview" aria-label="Selected economy values"></div><p id="indexNote" class="help">Index mode uses a shared positive base year.</p></aside>
           </div>
-          <section class="panel missing-panel"><div class="panel-head"><div><h3>Reporting coverage</h3><p class="panel-sub">Cells show whether a value was reported for each economy and year.</p></div><span class="legend-key"><i class="key-observed"></i>Observed <i class="key-missing"></i>Missing</span></div><div id="missingnessMount" class="table-wrap"></div></section>
-          <section class="panel ask-panel" aria-labelledby="askTitle"><div class="panel-head"><div><h3 id="askTitle">Explore a question</h3><p class="panel-sub">Compare economies, rank values or check missing years in the selected data.</p></div><svg class="ask-mark" viewBox="0 0 40 40" aria-hidden="true"><path d="M9 9h22v17H19l-7 6v-6H9z"/><path d="M15 15h10M15 20h7"/></svg></div>
+          <div class="coverage-rail" aria-label="Observation coverage in the selected window"><div class="coverage-copy"><strong id="gapHeadline">Reporting coverage</strong><p id="gapCopy">Missing values remain blank.</p></div><p id="coverageSummary" class="coverage-summary">Choose economies to inspect coverage</p><div id="coverageMarks" class="coverage-marks" aria-hidden="true"></div></div>
+          <section class="macro-lens" aria-labelledby="macroLensTitle"><div class="macro-lens-head"><div><h3 id="macroLensTitle">Across the indicators</h3><p id="macroLensNote">Source values for the comparison year. Trends use the selected window and a separate scale for each indicator.</p></div><span id="macroLensWindow" class="macro-window">Selected window</span></div><div id="macroLensGrid" class="macro-lens-grid" aria-live="polite"></div></section>
+          <details class="ask-panel"><summary><span>Ask the data</span><span class="disclosure-note">Compare values, rank economies or find gaps</span></summary><div class="ask-content"><div class="panel-head"><div><h3 id="askTitle">Explore a question</h3><p class="panel-sub">Compare economies, rank values or check missing years in the selected data.</p></div><svg class="ask-mark" viewBox="0 0 40 40" aria-hidden="true"><path d="M9 9h22v17H19l-7 6v-6H9z"/><path d="M15 15h10M15 20h7"/></svg></div>
             <form id="questionForm"><label class="sr" for="questionInput">Ask about the selected data</label><textarea id="questionInput" class="field question-input" rows="3" maxlength="500" placeholder="Compare Brazil's inward FDI with India in 2024" disabled></textarea><div class="ask-actions"><span class="help">Try: compare Brazil and India · rank inward FDI · find missing years</span><button id="askButton" class="button accent" type="submit" disabled>Find answer</button></div></form><div id="answerMount" aria-live="polite"></div>
             <details class="faq"><summary>How to interpret the indicators</summary><div class="faq-grid"><p><b>Foreign direct investment.</b> Inward and outward series are annual net flows, not stocks or announced projects. Negative inward flows remain negative and can reflect disinvestment or reverse flows.</p><p><b>Current U.S. dollars.</b> Dollar series use current prices and are not adjusted for inflation. Long-run nominal changes alone do not measure real growth.</p><p><b>Data timing.</b> Provider release dates vary. Snapshot retrieval time records when this copy was assembled, not the most recent observation year.</p></div></details>
-          </section>
+          </div></details>
+
         </section>
+        <section class="tab-panel" id="tab-compare" aria-labelledby="compareTitle" hidden><div class="section-heading"><div><h2 id="compareTitle">Compare focus economies</h2></div><p id="compareNote" class="coverage-summary"></p></div><section class="panel"><div class="panel-head"><div><h3>Change across the selected window</h3><p id="compareChartNote" class="panel-sub">Compare the endpoints of your selected window.</p></div></div><div id="compareChartMount" class="plot-wrap" role="region" aria-label="Comparison of first and last annual observations"></div></section><details class="data-alternative comparison-data"><summary>All annual values for this comparison</summary><div id="compareTableMount" class="table-wrap"></div></details>          <div class="chart-grid">
+            <section class="panel ranking-panel" aria-labelledby="rankingTitle"><div class="panel-head"><div><h3 id="rankingTitle">Global ranking <span class="year-tag">· <span id="rankYear">Not set</span></span></h3><p class="panel-sub">Compare reported values. Negative flows remain below zero.</p></div></div><div class="ranking-filter"><label for="rankingScope">Show</label><select id="rankingScope" class="field" disabled><option value="top12">Top 12 + focus economies</option><option value="all">All reporting economies</option></select></div><div id="rankingMount" class="plot-wrap rank-scroll" role="region" aria-label="Interactive signed economy ranking"></div><details class="data-alternative"><summary>Show ranking values as a table</summary><div id="rankingTableMount" class="table-wrap"></div></details></section>
+            <section class="panel scatter-panel" aria-labelledby="scatterTitle"><div class="panel-head"><div><h3 id="scatterTitle">Income and inward FDI <span class="year-tag">· <span id="scatterYear">Not set</span></span></h3><p class="panel-sub">How income and investment relate across reporting economies.</p></div></div><div id="scatterMount" class="plot-wrap" role="region" aria-label="Interactive GDP per capita and inward FDI scatter plot"></div><p id="scatterStatus" class="chart-caption">Only economies with both selected-year observations appear.</p><details class="data-alternative"><summary>Show scatter values as a table</summary><div id="scatterTableMount" class="table-wrap"></div></details></section>
+          </div>
+<section class="interpretation"><h3>Reading the comparison</h3><p>Each cell reports the selected indicator. Missing values remain blank. Index mode requires one shared positive base year for all focus economies in the selected window.</p></section></section>
 
-        <section class="tab-panel" id="tab-compare" aria-labelledby="compareTitle" hidden><div class="section-heading"><div><h2 id="compareTitle">Compare focus economies</h2></div><p id="compareNote" class="coverage-summary"></p></div><section class="panel"><div class="panel-head"><div><h3>From the first year to the last</h3><p id="compareChartNote" class="panel-sub">Compare the endpoints of your selected window.</p></div></div><div id="compareChartMount" class="plot-wrap" role="region" aria-label="Comparison of first and last annual observations"></div></section><section class="panel"><div id="compareTableMount" class="table-wrap"></div></section><section class="interpretation"><h3>Reading the comparison</h3><p>Each cell reports the selected indicator. Missing values remain blank. Index mode requires one shared positive base year for all focus economies in the selected window.</p></section></section>
-
-        <section class="tab-panel" id="tab-sources" aria-labelledby="sourcesTitle" hidden><div class="section-heading"><div><h2 id="sourcesTitle">Sources and method</h2></div><p class="coverage-summary">Annual releases and research documents</p></div><div class="source-grid"><section class="panel"><div class="panel-head"><div><h3>Series and units</h3></div></div><div id="sourceList" class="record-list"></div></section><section class="panel"><div class="panel-head"><div><h3>Coverage by provider</h3></div></div><div id="readinessList" class="record-list"></div></section></div><section class="panel lineage-panel"><div class="panel-head"><div><h3>Data coverage and publication record</h3></div></div><div id="qualityList" class="quality-grid"></div><div id="sourceRecords" class="source-records"></div></section>
+        <section class="tab-panel" id="tab-sources" aria-labelledby="sourcesTitle" hidden><div class="section-heading"><div><h2 id="sourcesTitle">Evidence and sources</h2></div><p class="coverage-summary">Check definitions, coverage and original documents</p></div>          <section class="panel missing-panel"><div class="panel-head"><div><h3>Reporting coverage</h3><p class="panel-sub">Cells show whether a value was reported for each economy and year.</p></div><span class="legend-key"><i class="key-observed"></i>Observed <i class="key-missing"></i>Missing</span></div><div id="missingnessMount" class="table-wrap"></div></section>
+<div class="source-grid"><section class="panel"><div class="panel-head"><div><h3>Series and units</h3></div></div><div id="sourceList" class="record-list"></div></section><section class="panel"><div class="panel-head"><div><h3>Coverage by provider</h3></div></div><div id="readinessList" class="record-list"></div></section></div><section class="panel lineage-panel"><div class="panel-head"><div><h3>Data coverage and publication record</h3></div></div><div id="qualityList" class="quality-grid"></div><div id="sourceRecords" class="source-records"></div></section>
           <section class="panel report-reference"><h3>Emerging Market Multinationals Report</h3><p>The EMI workbench complements the annual Cornell report with comparable public indicators. It does not reproduce licensed company data or every analysis in the report.</p><a href="https://business.cornell.edu/centers/ccem/research/emerging-markets-report/" target="_blank" rel="noopener noreferrer">Visit Cornell's official report archive</a><p class="small-note">Cornell EMI research prototype · source coverage and vintages remain explicit.</p></section>
         </section>
 
         <section class="tab-panel" id="tab-chapters" aria-labelledby="chaptersTitle" hidden><div class="section-heading"><div><h2 id="chaptersTitle">A wider research agenda</h2></div><p id="chapterSummary" class="coverage-summary"></p></div><p class="scope-intro">The public indicator set provides macro context. It does not reproduce company cases, licensed databases, or causal and editorial claims in the annual report.</p><div id="chapterList" class="chapter-list"></div></section>
         <footer class="site-footer"><span>Cornell EMI · Private research workspace</span><span>Descriptive indicators do not establish causal effects.</span><a href="https://business.cornell.edu/centers/ccem/research/emerging-markets-report/" target="_blank" rel="noopener noreferrer">Cornell report archive</a></footer>
+
       </div>
     </div>
   </main>

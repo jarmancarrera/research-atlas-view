@@ -5,8 +5,8 @@
   const NS = "http://www.w3.org/2000/svg";
   const STORE = "emi-observatory.views:";
   const DEFAULTS = ["BRA", "CHN", "IND"];
-  const COLORS = ["#b31b1b", "#176b80", "#8a6b32"];
-  const PLOT = { navy: "#14273b", red: "#b31b1b", blue: "#17647a", grid: "#e7eaed", muted: "#637387", ink: "#26394d", paper: "#ffffff" };
+  const COLORS = ["#b31b1b", "#146b78", "#8b672b"];
+  const PLOT = { navy: "#263b45", red: "#b31b1b", blue: "#146b78", grid: "#e8ede9", muted: "#59646a", ink: "#38413e", paper: "#ffffff" };
   const state = {
     data: null, observations: new Map(), years: [], busy: false,
     view: { metric: "", from: 2000, to: 2025, year: 2025, countries: [], mode: "level", baseYear: null, scope: "top12", presentation: "chart", tab: "overview" },
@@ -41,6 +41,21 @@
     const amount = Math.abs(value), suffix = amount >= 1e12 ? "T" : amount >= 1e9 ? "B" : amount >= 1e6 ? "M" : amount >= 1e3 ? "k" : "";
     const factor = { T: 1e12, B: 1e9, M: 1e6, k: 1e3 }[suffix] || 1;
     return `${value < 0 ? "−" : ""}${fmt(Math.abs(value) / factor, 1)}${suffix}`;
+  }
+  function compactNumber(value, item = metric()) {
+    if (value === null || !Number.isFinite(value)) return "No observation";
+    const number = axisNumber(Math.abs(value), item);
+    return `${value < 0 ? "−" : ""}${isDollars(item) ? "$" : ""}${number}`;
+  }
+  function chartTicks(values, item = metric()) {
+    const finite = values.filter((value) => value !== null && Number.isFinite(value));
+    if (!finite.length) return {};
+    const low = Math.min(0, ...finite), high = Math.max(0, ...finite), rough = (high - low || 1) / 4;
+    const magnitude = 10 ** Math.floor(Math.log10(rough)), normalized = rough / magnitude;
+    const step = (normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 5 ? 5 : 10) * magnitude;
+    const ticks = [];
+    for (let value = Math.floor(low / step) * step; value <= high + step * 0.05; value += step) ticks.push(value);
+    return { tickmode: "array", tickvals: ticks, ticktext: ticks.map((value) => compactNumber(value, item)) };
   }
   function safeUrl(raw) {
     try { if (typeof raw !== "string" || !raw.trim()) return null; const url = new URL(raw); return ["https:", "http:"].includes(url.protocol) ? url.href : null; }
@@ -91,6 +106,7 @@
     $("#deleteView").disabled = !$("#savedViews").value;
   }
   function emptyChart(root, text, key = null) {
+    root.style.removeProperty("height");
     state.renders.set(root, (state.renders.get(root) || 0) + 1);
     if (key) { state.plotRefs[key] = null; if (key === "timeline") $("#exportSvg").disabled = true; }
     if (window.Plotly) window.Plotly.purge(root);
@@ -166,13 +182,13 @@
     const data = state.data, windowData = data.window || {};
     $("#economyCount").textContent = data.countries.length; $("#indicatorCount").textContent = data.metrics.length;
     $("#observationWindow").textContent = `${windowData.start}–${windowData.end}`;
-    $("#snapshotId").textContent = ""; $("#snapshotMode").textContent = $("#pinSnapshot").checked ? "Saved data version" : "Latest release";
+    $("#snapshotId").textContent = ""; $("#snapshotMode").textContent = $("#pinSnapshot").checked ? "Saved data version" : "Available data version";
     $("#retrievedAt").textContent = date(data.retrieved_at); $("#providerUpdated").textContent = date(data.provider_last_updated); $("#sourceName").textContent = /world.?bank/i.test(data.source || "") ? "World Bank" : publicText(data.source || "Not supplied");
   }
   function renderMetric() {
     const item = metric();
     $("#overviewTitle").textContent = item?.label || "Explore the data";
-    $("#metricDescription").textContent = item ? `${item.description || "Definition not supplied."} ${item.unit ? `Unit: ${item.unit}.` : ""} ${item.frequency ? `Frequency: ${item.frequency}.` : ""}` : "Choose an indicator.";
+    $("#metricDescription").textContent = item ? `${item.description || "Definition not supplied."} ${item.unit ? `Unit: ${item.unit}.` : ""}` : "Choose an indicator.";
     const base = commonBase(), index = $('input[name="seriesMode"][value="index"]'); index.disabled = !base;
     if (!base && state.view.mode === "index") { state.view.mode = "level"; $('input[name="seriesMode"][value="level"]').checked = true; }
     $("#indexNote").textContent = base ? `Shared positive base year: ${base}. Every focus economy is rebased to 100.` : "Index mode needs a positive observation for every focus economy in one shared year.";
@@ -181,8 +197,10 @@
     const root = $("#macroLensGrid"), metrics = state.data.metrics, countries = state.view.countries, years = yearsView();
     clear(root); $("#macroLensWindow").textContent = `${state.view.from}–${state.view.to} · focus year ${state.view.year}`;
     metrics.forEach((item) => {
-      const card = el("article", "macro-card"), head = el("div", "macro-card-head"), title = el("h4", "", item.label || item.id), unit = el("span", "macro-unit", item.unit || "Unit not supplied");
-      head.append(title, unit); card.append(head);
+      const card = el("article", `macro-card${item.id === state.view.metric ? " active" : ""}`), head = el("div", "macro-card-head"), title = el("h4"), unit = el("span", "macro-unit", item.unit || "Unit not supplied");
+      const choose = el("button", "macro-select", item.label || "Indicator"); choose.type = "button"; choose.setAttribute("aria-label", `Explore ${item.label || "indicator"}`);
+      choose.addEventListener("click", () => { $("#metricSelect").value = item.id; state.view.baseYear = null; draw(); $("#overviewTitle").scrollIntoView({ block: "start", behavior: "auto" }); });
+      title.append(choose); head.append(title, unit); card.append(head);
       const svg = document.createElementNS(NS, "svg"); svg.setAttribute("viewBox", "0 0 360 76"); svg.setAttribute("role", "img"); svg.setAttribute("aria-label", `${item.label || item.id} annual source values, ${state.view.from} to ${state.view.to}`);
       const guide = document.createElementNS(NS, "path"); guide.setAttribute("d", "M5 60H355 M5 31H355"); guide.setAttribute("fill", "none"); guide.setAttribute("stroke", "#e3e8eb"); guide.setAttribute("stroke-width", "1"); svg.append(guide);
       const rows = countries.map((id, index) => ({ id, index, values: years.map((year) => obs(id, item.id, year)) }));
@@ -196,10 +214,10 @@
       });
       if (!valid.length) card.append(svg, el("p", "macro-empty", `No observations in ${state.view.from}–${state.view.to}.`)); else card.append(svg);
       const current = el("div", "macro-current");
-      countries.forEach((id, index) => { const value = obs(id, item.id, state.view.year), line = el("div", "macro-current-row"); line.style.setProperty("--series", COLORS[index % COLORS.length]); line.append(el("span", "", name(id)), el("strong", "", value === null ? "No observation" : displayNumber(value, item))); current.append(line); });
+      countries.forEach((id, index) => { const value = obs(id, item.id, state.view.year), line = el("div", "macro-current-row"); line.style.setProperty("--series", COLORS[index % COLORS.length]); line.append(el("span", "", name(id)), el("strong", "", compactNumber(value, item))); line.lastChild.title = displayNumber(value, item); current.append(line); });
       if (!countries.length) current.append(el("p", "macro-empty", "Choose focus economies to compare current values."));
       card.append(current);
-      if (item.source_url) { const cite = el("div", "macro-citation"); addLink(cite, item.source_url, "Source series"); card.append(cite); }
+      if (item.source_url) { const cite = el("div", "macro-citation"); addLink(cite, item.source_url, "Source"); card.append(cite); }
       root.append(card);
     });
   }
@@ -220,11 +238,11 @@
     state.view.countries.forEach((id, index) => {
       const value = obs(id, state.view.metric, state.view.year), prior = state.view.year > state.view.from ? obs(id, state.view.metric, state.view.year - 1) : null;
       const card = el("article", "economy-summary"), header = el("div", "economy-summary-head"), dot = el("i", "focus-swatch"); dot.style.setProperty("--series", COLORS[index]); header.append(dot, el("span", "", name(id)));
-      const number = value === null ? "No data" : `${isDollars() ? "$" : ""}${axisNumber(value)}`;
+      const number = value === null ? "No data" : compactNumber(value);
       const reading = el("strong", "economy-summary-value", number); reading.title = displayNumber(value);
       card.append(header, reading, el("span", "economy-summary-year", `${state.view.year} · ${itemUnit(metric())}`));
       const change = el("p", "economy-summary-change");
-      if (value !== null && prior !== null) { const delta = value - prior; change.append(el("strong", "", `${delta > 0 ? "+" : ""}${axisNumber(delta, isPercent() ? { unit: "" } : metric())}${isPercent() ? " pp" : ""}`), document.createTextNode(` vs ${state.view.year - 1}`)); }
+      if (value !== null && prior !== null) { const delta = value - prior; change.append(el("strong", "", `${delta > 0 ? "+" : ""}${compactNumber(delta, isPercent() ? { unit: "" } : metric())}${isPercent() ? " pp" : ""}`), document.createTextNode(` vs ${state.view.year - 1}`)); }
       else change.textContent = "Annual change unavailable";
       card.append(change); root.append(card);
     }); root.hidden = !state.view.countries.length;
@@ -238,19 +256,28 @@
     const marks = $("#coverageMarks"); clear(marks);
     years.slice(-16).forEach((year) => { const mark = el("i", "coverage-tick"); const complete = ids.length > 0 && ids.every((id) => obs(id, state.view.metric, year) !== null); mark.classList.toggle("gap", !complete); mark.title = `${year}: ${complete ? "all focus economies reported" : "one or more observations missing"}`; marks.append(mark); });
   }
-  function plotConfig() { return { responsive: true, displaylogo: false, scrollZoom: true, modeBarButtonsToRemove: ["lasso2d", "select2d", "autoScale2d"] }; }
+  function plotConfig() { return { responsive: true, displaylogo: false, scrollZoom: false, modeBarButtonsToRemove: ["lasso2d", "select2d", "autoScale2d"] }; }
   function plotLayout(extra = {}) {
     return { paper_bgcolor: PLOT.paper, plot_bgcolor: PLOT.paper, font: { family: "IBM Plex Sans, Arial, sans-serif", size: 13, color: PLOT.ink }, hoverlabel: { bgcolor: PLOT.navy, bordercolor: PLOT.navy, font: { family: "IBM Plex Sans, Arial, sans-serif", color: "#fff", size: 14 } }, margin: { l: 68, r: 22, t: 14, b: 58 }, showlegend: false, ...extra };
+  }
+  function fitVisiblePlot(root) {
+    if (root?.data && root.clientWidth && root.clientHeight && window.Plotly) {
+      // A chart first drawn in a hidden tab has Plotly's fallback width.
+      // Explicitly use the measured mount width once the panel is visible.
+      window.Plotly.relayout(root, { width: root.clientWidth, autosize: true });
+    }
   }
   function renderPlot(root, key, traces, layout, onPoint) {
     const plotly = window.Plotly;
     state.plotRefs[key] = null; if (key === "timeline") $("#exportSvg").disabled = true;
     if (!plotly) { emptyChart(root, "Interactive charts are not available. Use the table view or reload the published page.", key); return; }
     const token = (state.renders.get(root) || 0) + 1; state.renders.set(root, token);
+    root.style.height = `${layout.height}px`; // Reserve chart flow before responsive SVG layout settles.
+    if (!root.data) clear(root); // Remove the earlier loading/empty state before Plotly owns this mount.
     const previous = root.data ? plotly.react(root, traces, layout, plotConfig()) : plotly.newPlot(root, traces, layout, plotConfig());
     Promise.resolve(previous).then(() => {
       if (state.renders.get(root) !== token) return;
-      state.plotRefs[key] = root;
+      state.plotRefs[key] = root; fitVisiblePlot(root);
       if (key === "timeline") $("#exportSvg").disabled = !state.view.countries.length;
       root.removeAllListeners?.("plotly_click"); if (onPoint) root.on("plotly_click", onPoint);
     }).catch(() => { if (state.renders.get(root) === token) emptyChart(root, "The chart could not be drawn. The accessible data table remains available.", key); });
@@ -273,13 +300,13 @@
     const traces = ids.map((id, index) => ({
       type: "scatter", mode: "lines+markers", name: esc(name(id)), x: years,
       y: years.map((year) => displayed(id, year, base)), connectgaps: false,
-      line: { color: COLORS[index], width: 2.5 }, marker: { color: COLORS[index], size: 6, line: { color: "#fff", width: 1 } },
+      line: { color: COLORS[index], width: 2.6 }, marker: { color: COLORS[index], size: 4, line: { color: "#fff", width: 0.7 } },
       customdata: years.map((year) => [obs(id, state.view.metric, year), year]),
       hovertemplate: `<b>${esc(name(id))}</b><br>%{x}: %{y:,.4g}<br>Source value: %{customdata[0]:,.4g} ${esc(item?.unit || "")}<extra></extra>`
     }));
-    const layout = plotLayout({ height: window.innerWidth < 560 ? 340 : 400, showlegend: false, legend: { orientation: "h", x: 0, y: 1.13, font: { size: 13 } }, margin: { l: window.innerWidth < 560 ? 65 : 80, r: 18, t: 15, b: 62 }, hovermode: "x unified", dragmode: "zoom",
-      xaxis: { title: { text: "Observation year", standoff: 12, font: { size: 14 } }, tickfont: { size: 13 }, range: [state.view.from, state.view.to], dtick: Math.max(1, Math.ceil((state.view.to - state.view.from) / 8)), tick0: state.view.from, gridcolor: PLOT.grid, zeroline: false, fixedrange: false },
-      yaxis: { title: { text: state.view.mode === "index" ? "Index points · common positive base = 100" : item?.unit || "Value", standoff: 12, font: { size: 14 } }, tickfont: { size: 13 }, gridcolor: PLOT.grid, zeroline: true, zerolinecolor: "#718091", zerolinewidth: 1, automargin: true },
+    const layout = plotLayout({ height: window.innerWidth < 560 ? 300 : 365, showlegend: false, legend: { orientation: "h", x: 0, y: 1.13, font: { size: 13 } }, margin: { l: window.innerWidth < 560 ? 48 : 58, r: 18, t: 20, b: 38 }, hovermode: "x unified", dragmode: "zoom",
+      xaxis: { title: { text: "" }, tickfont: { size: 12 }, range: [state.view.from, state.view.to], dtick: Math.max(1, Math.ceil((state.view.to - state.view.from) / (window.innerWidth < 560 ? 4 : 6))), tick0: state.view.from, showgrid: false, zeroline: false, fixedrange: false },
+      yaxis: { title: { text: "" }, tickfont: { size: 12 }, gridcolor: PLOT.grid, zeroline: true, zerolinecolor: "#adbcb3", zerolinewidth: 1, automargin: true, ...chartTicks(traces.flatMap((trace) => trace.y), state.view.mode === "index" ? { unit: "index" } : item) },
       shapes: [{ type: "line", x0: state.view.year, x1: state.view.year, y0: 0, y1: 1, yref: "paper", line: { color: "#93a0ac", width: 1, dash: "dot" } }]
     });
     renderPlot(root, "timeline", traces, layout); renderTimelineTable(years); toggleTimeline();
@@ -294,9 +321,9 @@
     if (!rows.length) { emptyChart(root, `No data for selected year (${state.view.year}).`, "ranking"); clear($("#rankingTableMount")); return; }
     const focus = new Set(state.view.countries), shown = state.view.scope === "all" ? rows : rows.filter((row, index) => index < 12 || focus.has(row.item.id));
     const categories = shown.map((row) => row.item.name || row.item.id), values = shown.map((row) => row.value), maximum = Math.max(1, ...values.map(Math.abs));
-    const trace = { type: "bar", orientation: "h", y: categories, x: values, marker: { color: shown.map((row) => focus.has(row.item.id) ? PLOT.red : "#9aadb7"), line: { color: "#fff", width: 0.5 } }, customdata: shown.map((row) => [esc(row.item.id), displayNumber(row.value)]), hovertemplate: `<b>%{y}</b><br>${state.view.year}: %{customdata[1]}<extra></extra>` };
+    const trace = { type: "bar", orientation: "h", y: categories, x: values, marker: { color: shown.map((row) => focus.has(row.item.id) ? COLORS[state.view.countries.indexOf(row.item.id)] : "#a4b6b0"), line: { color: "#fff", width: 0.5 } }, customdata: shown.map((row) => [esc(row.item.id), displayNumber(row.value)]), hovertemplate: `<b>%{y}</b><br>${state.view.year}: %{customdata[1]}<extra></extra>` };
     const height = Math.max(430, Math.min(6200, shown.length * 27 + 100));
-    const layout = plotLayout({ height, bargap: 0.26, margin: { l: Math.min(220, Math.max(150, Math.round(window.innerWidth * 0.32))), r: 30, t: 14, b: 76 }, xaxis: { title: { text: itemUnit(metric()), font: { size: 14 } }, tickfont: { size: 13 }, range: [Math.min(0, ...values) * 1.1, Math.max(1, ...values) * 1.12], zeroline: true, zerolinecolor: "#687784", zerolinewidth: 1.6, gridcolor: PLOT.grid, tickformat: "~s", automargin: true }, yaxis: { autorange: "reversed", tickfont: { size: 13 }, automargin: true, fixedrange: true } });
+    const layout = plotLayout({ height, bargap: 0.26, margin: { l: Math.min(220, Math.max(150, Math.round(window.innerWidth * 0.32))), r: 30, t: 14, b: 76 }, xaxis: { title: { text: itemUnit(metric()), font: { size: 14 } }, tickfont: { size: 13 }, range: [Math.min(0, ...values) * 1.1, Math.max(1, ...values) * 1.12], zeroline: true, zerolinecolor: "#687784", zerolinewidth: 1.6, gridcolor: PLOT.grid, ...chartTicks(values), automargin: true }, yaxis: { autorange: "reversed", tickfont: { size: 13 }, automargin: true, fixedrange: true } });
     renderPlot(root, "ranking", [trace], layout);
     $("#rankingTableMount").replaceChildren(makeTable(["Rank", "Economy", `Value · ${itemUnit(metric())}`], shown.map((row) => [rows.indexOf(row) + 1, row.item.name || row.item.id, displayNumber(row.value)])));
   }
@@ -307,13 +334,13 @@
     if (!points.length) { emptyChart(root, `No data for selected year (${state.view.year}) with both GDP per capita and inward FDI.`, "scatter"); $("#scatterStatus").textContent = "A point requires positive GDP per capita and a reported net inward FDI value."; clear($("#scatterTableMount")); return; }
     const selected = new Set(state.view.countries);
     const trace = { type: "scatter", mode: "markers", x: points.map((point) => point.x), y: points.map((point) => point.y),
-      marker: { size: points.map((point) => selected.has(point.item.id) ? 10 : 7), color: points.map((point) => selected.has(point.item.id) ? PLOT.red : PLOT.blue), opacity: 0.78, line: { color: "#fff", width: 1 } },
+      marker: { size: points.map((point) => selected.has(point.item.id) ? 12 : 6), color: points.map((point) => selected.has(point.item.id) ? COLORS[state.view.countries.indexOf(point.item.id)] : "#839d96"), opacity: 0.78, line: { color: "#fff", width: 1 } },
       customdata: points.map((point) => [esc(point.item.id), esc(point.item.name || point.item.id), point.x, point.y]),
       hovertemplate: `<b>%{customdata[1]}</b><br>GDP per capita: $%{customdata[2]:,.0f} (current US$)<br>Net inward FDI: $%{customdata[3]:,.4g} (current US$)<br>Year: ${state.view.year}<extra></extra>` };
     const zero = Math.min(...points.map((point) => point.y)) < 0 && Math.max(...points.map((point) => point.y)) > 0;
-    const layout = plotLayout({ height: 430, margin: { l: window.innerWidth < 560 ? 67 : 85, r: 16, t: 18, b: 77 }, hovermode: "closest", xaxis: { type: "log", title: { text: "GDP per capita · current U.S. dollars · log scale", font: { size: 14 } }, tickfont: { size: 13 }, gridcolor: PLOT.grid, zeroline: false, tickprefix: "$", tickformat: "~s", automargin: true }, yaxis: { title: { text: "Net inward FDI · current U.S. dollars", font: { size: 14 } }, tickfont: { size: 13 }, gridcolor: PLOT.grid, zeroline: true, zerolinecolor: "#687784", zerolinewidth: 1.6, tickprefix: "$", tickformat: "~s", automargin: true } });
+    const layout = plotLayout({ height: 430, margin: { l: window.innerWidth < 560 ? 67 : 85, r: 16, t: 18, b: 77 }, hovermode: "closest", xaxis: { type: "log", title: { text: "GDP per capita · US$ · logarithmic scale", font: { size: 14 } }, tickfont: { size: 13 }, gridcolor: PLOT.grid, zeroline: false, tickprefix: "$", tickformat: "~s", automargin: true }, yaxis: { title: { text: "Net inward FDI · US$", font: { size: 14 } }, tickfont: { size: 13 }, gridcolor: PLOT.grid, zeroline: true, zerolinecolor: "#687784", zerolinewidth: 1.6, ...chartTicks(points.map((point) => point.y), { unit: "current US$" }), automargin: true } });
     renderPlot(root, "scatter", [trace], layout, (event) => { const id = event.points?.[0]?.customdata?.[0]; if (typeof id === "string") addCountry(id, true); });
-    $("#scatterTableMount").replaceChildren(makeTable(["Economy", "GDP per capita · current U.S. dollars", "Net inward FDI · current U.S. dollars"], points.map((point) => [point.item.name || point.item.id, displayNumber(point.x, { unit: "current US$" }), displayNumber(point.y, { unit: "current US$" })])));
+    $("#scatterTableMount").replaceChildren(makeTable(["Economy", "GDP per capita · current U.S. dollars", "Net inward FDI · US$"], points.map((point) => [point.item.name || point.item.id, displayNumber(point.x, { unit: "current US$" }), displayNumber(point.y, { unit: "current US$" })])));
     $("#scatterStatus").textContent = `${points.length} economies with both values. Negative inward flows remain visible. Select a point to add it to focus.`;
   }
   function makeTable(headers, rows, cls = "data-table") {
@@ -345,8 +372,8 @@
     const root = $("#compareChartMount"), ids = state.view.countries, first = state.view.from, last = state.view.to, base = commonBase();
     $("#compareChartNote").textContent = `${metric()?.label || "Selected indicator"} · ${first} and ${last} · ${displayUnit()}. A missing endpoint is left blank.`;
     if (!ids.length || !ids.some((id) => displayed(id, first, base) !== null || displayed(id, last, base) !== null)) { emptyChart(root, "No endpoint observations for this selection.", "comparison"); return; }
-    const traces = ids.map((id, index) => ({ type: "scatter", mode: "lines+markers", x: [displayed(id, first, base), displayed(id, last, base)], y: [name(id), name(id)], connectgaps: false, line: { color: "#c3ccd0", width: 3 }, marker: { color: [PLOT.navy, PLOT.red], size: 12, symbol: ["circle-open", "circle"] }, customdata: [first, last], hovertemplate: `<b>${esc(name(id))}</b><br>%{customdata}: %{x:,.4g} ${esc(displayUnit())}<extra></extra>`, showlegend: false }));
-    const layout = plotLayout({ height: Math.max(230, ids.length * 65 + 90), margin: { l: window.innerWidth < 560 ? 78 : 120, r: 35, t: 20, b: 70 }, xaxis: { title: { text: state.view.mode === "index" ? "Index, common base = 100" : itemUnit(metric()), font: { size: 12 } }, gridcolor: PLOT.grid, zeroline: true, zerolinecolor: "#82939e", tickformat: "~s", automargin: true }, yaxis: { autorange: "reversed", tickfont: { size: 13 }, automargin: true, fixedrange: true }, annotations: [{ x: 0, y: 1.12, xref: "paper", yref: "paper", xanchor: "left", text: `Open circle: ${first} · Filled red circle: ${last}`, showarrow: false, font: { size: 11, color: PLOT.muted } }] });
+    const traces = ids.map((id, index) => ({ type: "scatter", mode: "lines+markers", x: [displayed(id, first, base), displayed(id, last, base)], y: [name(id), name(id)], connectgaps: false, line: { color: "#c3ccd0", width: 3 }, marker: { color: [COLORS[index], COLORS[index]], size: 12, symbol: ["circle-open", "circle"] }, customdata: [first, last], hovertemplate: `<b>${esc(name(id))}</b><br>%{customdata}: %{x:,.4g} ${esc(displayUnit())}<extra></extra>`, showlegend: false }));
+    const layout = plotLayout({ height: Math.max(230, ids.length * 65 + 90), margin: { l: window.innerWidth < 560 ? 78 : 120, r: 35, t: 20, b: 70 }, xaxis: { title: { text: state.view.mode === "index" ? "Index, common base = 100" : itemUnit(metric()), font: { size: 12 } }, gridcolor: PLOT.grid, zeroline: true, zerolinecolor: "#82939e", tickformat: "~s", automargin: true }, yaxis: { autorange: "reversed", tickfont: { size: 13 }, automargin: true, fixedrange: true }, annotations: [{ x: 0, y: 1.12, xref: "paper", yref: "paper", xanchor: "left", text: `Open circle: ${first} · Filled circle: ${last}`, showarrow: false, font: { size: 11, color: PLOT.muted } }] });
     renderPlot(root, "comparison", traces, layout);
   }
   function record(parent, title, description, tag) {
@@ -356,13 +383,13 @@
     const sourceRoot = $("#sourceList"); clear(sourceRoot);
     state.data.metrics.forEach((item) => { const article = record(sourceRoot, item.label || "Indicator", `${item.description || "Definition not supplied."} ${item.unit ? `Unit: ${item.unit}.` : ""} ${item.frequency ? `Frequency: ${item.frequency}.` : ""}`, item.frequency || "Annual"); if (item.source_url) { const p = el("p", "record-note"); addLink(p, item.source_url, "Open source series"); article.append(p); } });
     const readinessRoot = $("#readinessList"); clear(readinessRoot);
-    (state.data.readiness || []).forEach((item) => { const article = record(readinessRoot, item.provider || item.route || "Provider", item.notes || item.route || "No readiness note supplied.", publicText((item.status || "Not supplied").replaceAll("_", " "))); if (item.doc_url) { const p = el("p", "record-note"); addLink(p, item.doc_url, "Provider documentation"); article.append(p); } });
+    (state.data.readiness || []).forEach((item) => { const article = record(readinessRoot, item.provider || item.route || "Provider", item.notes || item.route || "No readiness note supplied.", ({ connected_validated_snapshot: "Validated data copy", snapshot_validated: "Validated data copy", acquisition_pending: "Acquisition pending", license_required: "Permission required", pending_license: "Permission required", manual_review: "Review required" }[item.status] || "See coverage note")); if (item.doc_url) { const p = el("p", "record-note"); addLink(p, item.doc_url, "Provider documentation"); article.append(p); } });
     if (!(state.data.readiness || []).length) readinessRoot.append(el("p", "empty-state", "Provider coverage notes are not included in this release."));
     const qualityRoot = $("#qualityList"); clear(qualityRoot);
     Object.entries(state.data.quality || {}).filter(([key, value]) => typeof value === "number" || typeof value === "boolean").forEach(([key, value]) => { const box = el("div", "quality-item"); box.append(el("span", "quality-label", key.replaceAll("_", " ")), el("strong", "", typeof value === "boolean" ? value ? "Yes" : "No" : fmt(value, 0))); qualityRoot.append(box); });
     if (!qualityRoot.childNodes.length) qualityRoot.append(el("p", "empty-state", "No quality summary supplied."));
     const recordsRoot = $("#sourceRecords"); clear(recordsRoot);
-    (state.data.sources || []).forEach((item, index) => { const row = el("article", "source-record"); addLink(row, item.url, `Source publication ${index + 1}`); row.append(el("p", "record-note", [item.records !== undefined && `${item.records.toLocaleString("en")} observations`, item.lastupdated && `Published ${date(item.lastupdated)}`, item.retrieved_at && `Updated here ${date(item.retrieved_at)}`].filter(Boolean).join(" · "))); recordsRoot.append(row); });
+    (state.data.sources || []).forEach((item, index) => { const row = el("article", "source-record"); addLink(row, item.url, `Source publication ${index + 1}`); row.append(el("p", "record-note", [item.records !== undefined && `${item.records.toLocaleString("en")} observations`, item.lastupdated && `Source updated ${date(item.lastupdated)}`, item.retrieved_at && `Retrieved ${date(item.retrieved_at)}`].filter(Boolean).join(" · "))); recordsRoot.append(row); });
     const geo = state.data.quality?.geography_classification;
     if (geo) { const note = el("p", "geography-note", `Country names and classifications use metadata captured ${date(geo.vintage)}. Historical classification membership is not inferred.`); recordsRoot.prepend(note); }
   }
@@ -375,7 +402,7 @@
   function renderTabs() {
     document.querySelectorAll(".tab").forEach((button) => { const active = button.dataset.tab === state.view.tab; button.classList.toggle("active", active); active ? button.setAttribute("aria-current", "page") : button.removeAttribute("aria-current"); });
     document.querySelectorAll(".tab-panel").forEach((panel) => { panel.hidden = panel.id !== `tab-${state.view.tab}`; });
-    requestAnimationFrame(() => Object.values(state.plotRefs).forEach((plot) => { if (plot && window.Plotly) window.Plotly.Plots.resize(plot); }));
+    requestAnimationFrame(() => Object.values(state.plotRefs).forEach(fitVisiblePlot));
   }
   function addCountry(id, fromPoint = false) {
     if (state.view.countries.includes(id)) { $("#scatterStatus").textContent = `${name(id)} is already in focus.`; return; }
@@ -464,7 +491,7 @@
     const resolved = response.resolved_filters && typeof response.resolved_filters === "object" ? response.resolved_filters : {};
     const countries = Array.isArray(resolved.countries) ? resolved.countries : Array.isArray(response.countries) ? response.countries : requestedCountries;
     const selectedMetric = state.data.metrics.find((item) => item.id === (resolved.metric || response.metric || payload.metric));
-    parent.append(el("p", "answer-meta", `${selectedMetric?.label || "Selected indicator"} · ${resolved.year ?? response.year ?? payload.year} · ${countries.map(name).join(", ") || "All reporting economies"} · Published ${date(state.data.provider_last_updated)}`));
+    parent.append(el("p", "answer-meta", `${selectedMetric?.label || "Selected indicator"} · ${resolved.year ?? response.year ?? payload.year} · ${countries.map(name).join(", ") || "All reporting economies"} · Source updated ${date(state.data.provider_last_updated)}`));
   }
   async function ask(e) {
     e.preventDefault(); const question = $("#questionInput").value.trim(); if (!question) return $("#questionInput").focus();
@@ -479,28 +506,11 @@
       if (response.snapshot_id && response.snapshot_id !== state.data.snapshot_id) throw new Error("The answer refers to another snapshot, so it was not displayed.");
       if (response.status === "error") throw new Error(typeof response.answer === "string" ? response.answer : "This question could not be answered from the selected snapshot.");
       const answer = typeof response.answer === "string" ? response.answer : typeof response.text === "string" ? response.text : "No answer text was returned.";
-      const card = el("article", "answer-card"); card.append(el("span", "section-kicker", "SNAPSHOT ANSWER"), el("p", "answer-text", publicText(answer))); appendAnswerProvenance(card, response, countries, payload); output.replaceChildren(card);
+      const card = el("article", "answer-card"); card.append(el("span", "section-kicker", "Answer from the selected data"), el("p", "answer-text", publicText(answer))); appendAnswerProvenance(card, response, countries, payload); output.replaceChildren(card);
     } catch (error) { output.replaceChildren(el("p", "answer-error", publicText(error.message || "Could not answer from the selected data."))); }
     finally { $("#askButton").disabled = false; }
   }
 
-  function setupHeroParallax() {
-    const layer = $("#heroParallax"), motion = window.matchMedia("(prefers-reduced-motion: reduce)");
-    if (!layer || motion.matches) return;
-    let scheduled = false;
-    const update = () => {
-      scheduled = false;
-      if (motion.matches) { layer.style.transform = "none"; return; }
-      const section = layer.parentElement.getBoundingClientRect();
-      const offset = Math.max(-24, Math.min(24, (window.innerHeight * 0.5 - (section.top + section.height * 0.5)) * -0.035));
-      layer.style.transform = `translate3d(0, ${offset.toFixed(1)}px, 0)`;
-    };
-    const queue = () => { if (!scheduled) { scheduled = true; requestAnimationFrame(update); } };
-    window.addEventListener("scroll", queue, { passive: true });
-    window.addEventListener("resize", queue, { passive: true });
-    motion.addEventListener?.("change", (event) => { if (event.matches) layer.style.transform = "none"; else queue(); });
-    update();
-  }
   $("#reloadLatest").addEventListener("click", () => { $("#pinSnapshot").checked = false; const url = new URL(location.href); url.searchParams.delete("snapshot_id"); history.replaceState(null, "", url); load(); });
   $("#metricSelect").addEventListener("change", () => { state.view.baseYear = null; draw(); });
   ["#startYear", "#endYear"].forEach((selector) => $(selector).addEventListener("change", () => { state.view.baseYear = null; draw(); }));
@@ -523,13 +533,10 @@
       if (state.data && compact !== compactCharts) {
         compactCharts = compact;
         renderTimeline(); renderRanking(); renderScatter(); renderCompareChart();
-      } else Object.values(state.plotRefs).forEach((plot) => {
-        if (plot && plot.clientWidth && plot.clientHeight && window.Plotly) window.Plotly.Plots.resize(plot);
-      });
+      } else Object.values(state.plotRefs).forEach(fitVisiblePlot);
     });
   }, { passive: true });
   $("#toggleFilters").addEventListener("click", () => { const expanded = $(".controls").classList.toggle("expanded"); $("#toggleFilters").setAttribute("aria-expanded", String(expanded)); $("#toggleFilters span").textContent = expanded ? "−" : "+"; });
-  setupHeroParallax();
   const directSnapshot = new URL(location.href).searchParams.get("snapshot_id");
   $("#pinSnapshot").checked = Boolean(directSnapshot);
   load(directSnapshot || null);

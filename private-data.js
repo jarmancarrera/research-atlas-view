@@ -42,21 +42,21 @@
   function buildGate() {
     var style = element("style", {});
     style.textContent = [
-      ".emi-private-shade{position:fixed;inset:0;z-index:2147483647;display:grid;place-items:center;padding:24px;background:rgba(20,39,59,.94);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#172b40}",
-      ".emi-private-card{box-sizing:border-box;width:min(100%,460px);padding:36px;background:#fbf8f1;border:1px solid rgba(255,255,255,.3);border-radius:18px;box-shadow:0 24px 80px rgba(0,0,0,.3)}",
-      ".emi-private-brand{margin:0 0 24px;color:#b31b1b;font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}",
-      ".emi-private-card h1{margin:0 0 10px;color:#14273b;font-family:Georgia,serif;font-size:clamp(28px,6vw,38px);font-weight:500;line-height:1.12}",
+      ".emi-private-shade{position:fixed;inset:0;z-index:2147483647;display:grid;place-items:center;padding:24px;background:#f0f3ee;border-top:4px solid #b31b1b;font-family:'IBM Plex Sans',Arial,sans-serif;color:#232a2d}",
+      ".emi-private-card{box-sizing:border-box;width:min(100%,580px);padding:clamp(25px,5vw,48px);background:#fff;border:1px solid #d3dcd4;border-radius:3px;box-shadow:0 14px 40px rgba(35,56,43,.06)}",
+      ".emi-private-brand{margin:0 0 35px;padding-bottom:24px;border-bottom:1px solid #dce2dc;color:#b31b1b;font-family:Georgia,serif;font-size:29px;font-weight:400;letter-spacing:-.5px}",
+      ".emi-private-card h1{margin:0 0 14px;color:#232a2d;font-family:'IBM Plex Sans',Arial,sans-serif;font-size:clamp(26px,5vw,34px);font-weight:500;letter-spacing:-.7px;line-height:1.15}",
       ".emi-private-copy{margin:0 0 24px;color:#526172;font-size:15px;line-height:1.55}",
       ".emi-private-card label{display:block;margin:0 0 8px;color:#243a50;font-size:13px;font-weight:700}",
-      ".emi-private-card input{box-sizing:border-box;width:100%;min-height:48px;padding:11px 13px;border:1px solid #aeb8bf;border-radius:8px;background:white;color:#14273b;font:inherit}",
+      ".emi-private-card input{box-sizing:border-box;width:100%;min-height:48px;padding:11px 13px;border:1px solid #aeb8bf;border-radius:3px;background:white;color:#14273b;font:inherit}",
       ".emi-private-card input:focus{outline:3px solid #e39797;outline-offset:2px}",
-      ".emi-private-card button{width:100%;min-height:48px;margin-top:14px;border:0;border-radius:8px;background:#b31b1b;color:white;font:inherit;font-weight:700;cursor:pointer}",
+      ".emi-private-card button{width:100%;min-height:48px;margin-top:14px;border:0;border-radius:3px;background:#b31b1b;color:white;font:inherit;font-weight:700;cursor:pointer}",
       ".emi-private-card button:focus-visible{outline:3px solid #14273b;outline-offset:3px}",
       ".emi-private-card button:disabled{opacity:.65;cursor:wait}",
       ".emi-private-error{min-height:1.5em;margin:12px 0 0;color:#9b302b;font-size:14px;line-height:1.4}",
       ".emi-source-controls{display:grid;grid-template-columns:minmax(180px,2fr) minmax(150px,1fr);gap:8px 14px;align-items:center;margin:18px 0}",
       ".emi-source-controls label{font-size:13px;font-weight:700;color:#243a50}",
-      ".emi-source-controls input,.emi-source-controls select{min-height:42px;padding:8px 10px;border:1px solid #aeb8bf;border-radius:7px;background:#fff;color:#14273b;font:inherit}",
+      ".emi-source-controls input,.emi-source-controls select{min-height:42px;padding:8px 10px;border:1px solid #aeb8bf;border-radius:3px;background:#fff;color:#14273b;font:inherit}",
       ".emi-source-item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 16px;align-items:center;padding:14px 0;border-bottom:1px solid #dce2e4}",
       ".emi-source-detail,.emi-source-status{color:#526172;font-size:13px}",
       ".emi-source-item .button{grid-column:2;grid-row:1/3}",
@@ -73,15 +73,15 @@
     overlay.setAttribute("aria-labelledby", "emiPrivateTitle");
     overlay.setAttribute("aria-describedby", "emiPrivateCopy emiPrivateError");
     var card = element("section", { className: "emi-private-card" });
-    card.appendChild(element("p", { className: "emi-private-brand" }, "Cornell EMI · Private research"));
-    card.appendChild(element("h1", { id: "emiPrivateTitle" }, "Unlock the data room"));
+    card.appendChild(element("p", { className: "emi-private-brand" }, "Cornell EMI"));
+    card.appendChild(element("h1", { id: "emiPrivateTitle" }, "Emerging markets observatory"));
     card.appendChild(element("p", { id: "emiPrivateCopy", className: "emi-private-copy" },
-      "Enter the shared password to decrypt the private research package in this browser. Your password is not saved."));
+      "Open the private research workspace and source library with your shared password. Your password is not saved."));
     form = element("form", { novalidate: "" });
     var label = element("label", { htmlFor: "emiPrivatePassword" }, "Shared password");
     passwordInput = element("input", { id: "emiPrivatePassword", name: "password", type: "password",
       autocomplete: "off", required: "", autocapitalize: "off", spellcheck: "false" });
-    submitButton = element("button", { type: "submit" }, "Unlock private data");
+    submitButton = element("button", { type: "submit" }, "Open workspace");
     message = element("p", { id: "emiPrivateError", className: "emi-private-error", role: "alert", "aria-live": "assertive" });
     form.appendChild(label);
     form.appendChild(passwordInput);
@@ -350,7 +350,7 @@
       passwordInput.value = "";
       passwordInput.disabled = false;
       submitButton.disabled = false;
-      submitButton.textContent = "Unlock private data";
+      submitButton.textContent = "Open workspace";
       passwordInput.focus();
     });
   }

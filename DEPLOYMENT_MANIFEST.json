@@ -1,24 +1,24 @@
 {
   "result": "PASS",
-  "checked_at": "2026-10-14T21:21:01.933839+00:00",
+  "checked_at": "2026-10-14T23:03:55.468623+00:00",
   "data_asset_catalog_count": 164,
   "encrypted_source_files": 156,
   "plaintext_data_files": 0,
   "files": [
     {
       "file": "index.html",
-      "bytes": 16593,
-      "sha256": "002d5e5e03b8bbdc0530309bb2b3bd79c9e14f2c1f21a5c51f00fd25d59401c0"
+      "bytes": 15551,
+      "sha256": "727b43494bf9db9d26fe2102d6ac977502ebe46b9315a8616814a401035accd3"
     },
     {
       "file": "styles.css",
-      "bytes": 28089,
-      "sha256": "31afe4ba126c8fc3189aee8c3c9ac7a5d64eab3338668b4db1de25e6f62f5db6"
+      "bytes": 25283,
+      "sha256": "2990034c34e52fc524053e4cef1416b1485443325017aaeca92d445908886365"
     },
     {
       "file": "app.js",
-      "bytes": 58790,
-      "sha256": "1874385419f821fc84200c7ec02a303f30ff71316e21cddb07ab5d3fef1f82df"
+      "bytes": 59883,
+      "sha256": "3fa23474bf1f91f60f389b69ac31b7644b9acb6a6e456a2f63db172c56660f09"
     },
     {
       "file": "questions.js",
@@ -27,8 +27,8 @@
     },
     {
       "file": "private-data.js",
-      "bytes": 20147,
-      "sha256": "1b2f94687d7f57756bd714f52a347d61dd0993f11f1af059eedef96d47481ae4"
+      "bytes": 20216,
+      "sha256": "66051709dd43e935bd22f05006a1aa39a3c0e7b3b55ab039e6fa0f2047b5ee94"
     },
     {
       "file": "vendor/plotly-4.1.2.min.js",
@@ -850,5 +850,7 @@
       "bytes": 62697,
       "sha256": "bc7bd7ebe1c0a75b8e3c0da2e6f18a5933da88537a906e2997471de6a080a85c"
     }
-  ]
+  ],
+  "release_kind": "frontend design reset",
+  "protected_payloads_unchanged": true
 }
